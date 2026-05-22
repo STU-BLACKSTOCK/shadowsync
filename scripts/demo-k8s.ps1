@@ -1,7 +1,9 @@
-# ShadowSync — Minikube demo prep (build, load images, deploy, wait for pods)
+# ShadowSync — Minikube demo prep (profile: demo)
 # Run from project root: .\scripts\demo-k8s.ps1
+# Prerequisite: minikube start -p demo ... (see DEMO-RUNBOOK.md step 1)
 
 $ErrorActionPreference = "Stop"
+$MinikubeProfile = "demo"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
@@ -15,11 +17,12 @@ $Images = @(
 Write-Host "`n[1/6] Stopping Docker Compose (free ports)..." -ForegroundColor Cyan
 docker compose down --remove-orphans 2>$null
 
-Write-Host "`n[2/6] Checking Minikube..." -ForegroundColor Cyan
-minikube status | Out-Null
+Write-Host "`n[2/6] Checking Minikube profile '$MinikubeProfile'..." -ForegroundColor Cyan
+minikube status -p $MinikubeProfile 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Starting Minikube..."
-    minikube start
+    Write-Host "Minikube not running. Start it first (see DEMO-RUNBOOK.md step 1):" -ForegroundColor Yellow
+    Write-Host "  minikube start -p demo --driver=docker --container-runtime=docker --embed-certs --kubernetes-version=v1.30.0"
+    exit 1
 }
 
 Write-Host "`n[3/6] Building Docker images..." -ForegroundColor Cyan
@@ -28,10 +31,10 @@ docker build -t vishalv2005/shadowsync-shadow-app:latest .\shadow-app
 docker build -t vishalv2005/shadowsync-proxy:latest .\proxy
 docker build -t vishalv2005/shadowsync-dashboard:latest .\dashboard
 
-Write-Host "`n[4/6] Loading images into Minikube..." -ForegroundColor Cyan
+Write-Host "`n[4/6] Loading images into Minikube (-p $MinikubeProfile)..." -ForegroundColor Cyan
 foreach ($img in $Images) {
     Write-Host "  -> $img"
-    minikube image load $img
+    minikube image load $img -p $MinikubeProfile
 }
 
 Write-Host "`n[5/6] Deploying to Kubernetes..." -ForegroundColor Cyan
@@ -52,7 +55,7 @@ Write-Host @"
 
 Next steps (3 terminals):
 
-  Terminal A:  minikube service dashboard-service --url
+  Terminal A:  minikube service dashboard-service --url -p demo
   Terminal B:  kubectl port-forward service/proxy-service 3000:3000
   Terminal C:  cd shadow-app; npm install; npm run loadtest
 

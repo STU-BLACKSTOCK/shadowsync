@@ -63,11 +63,12 @@ docker compose up -d --build
 
 **Full step-by-step:** see [DEMO-RUNBOOK.md](./DEMO-RUNBOOK.md).
 
-Quick prep (Windows / Minikube):
+Quick prep (Windows / Minikube profile `demo`):
 
 ```powershell
+minikube start -p demo --driver=docker --container-runtime=docker --embed-certs --kubernetes-version=v1.30.0
 .\scripts\demo-k8s.ps1
-minikube service dashboard-service --url
+minikube service dashboard-service --url -p demo
 # New terminal: kubectl port-forward service/proxy-service 3000:3000
 # New terminal: cd shadow-app; npm install; npm run loadtest
 ```
