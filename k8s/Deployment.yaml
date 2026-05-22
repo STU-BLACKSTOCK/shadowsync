@@ -18,6 +18,18 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3001
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -44,6 +56,18 @@ spec:
               value: "true"
             - name: BUG_TYPE
               value: "missing_field"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -70,6 +94,18 @@ spec:
               value: "http://main-app-service:3001"
             - name: SHADOW_APP_URL
               value: "http://shadow-app-service:3002"
+          readinessProbe:
+            httpGet:
+              path: /__shadow/stats
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -91,3 +127,15 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10

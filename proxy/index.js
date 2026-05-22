@@ -12,10 +12,23 @@ const PORT = process.env.PORT || 3000;
 // In-memory log (dashboard polls this)
 const requestLog = [];
 
-app.use(async (req, res, next) => {
-  // Skip internal dashboard endpoint
-  if (req.url.startsWith("/__shadow")) return next();
+// Dashboard + smoke-test endpoints (must be registered before mirroring middleware)
+app.get("/__shadow/logs", (req, res) => {
+  res.json(requestLog.slice(0, 50));
+});
 
+app.get("/__shadow/stats", (req, res) => {
+  const total = requestLog.length;
+  const matched = requestLog.filter((r) => r.match).length;
+  const diverged = total - matched;
+  res.json({ total, matched, diverged, matchRate: total ? ((matched / total) * 100).toFixed(1) : 100 });
+});
+
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", service: "shadowsync-proxy" });
+});
+
+app.use(async (req, res) => {
   const requestId = uuidv4();
   const timestamp = Date.now();
   const { method, url, body } = req;
@@ -61,18 +74,6 @@ app.use(async (req, res, next) => {
   } else {
     res.status(502).json({ error: "Main app unreachable" });
   }
-});
-
-// Dashboard polling endpoint
-app.get("/__shadow/logs", (req, res) => {
-  res.json(requestLog.slice(0, 50));
-});
-
-app.get("/__shadow/stats", (req, res) => {
-  const total = requestLog.length;
-  const matched = requestLog.filter((r) => r.match).length;
-  const diverged = total - matched;
-  res.json({ total, matched, diverged, matchRate: total ? ((matched / total) * 100).toFixed(1) : 100 });
 });
 
 app.listen(PORT, () => console.log(`🔀 ShadowSync Proxy running on :${PORT}`));

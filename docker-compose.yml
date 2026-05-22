@@ -7,21 +7,48 @@ services:
       - MAIN_APP_URL=http://main-app:3001
       - SHADOW_APP_URL=http://shadow-app:3002
     depends_on:
-      - main-app
-      - shadow-app
+      main-app:
+        condition: service_healthy
+      shadow-app:
+        condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - proxy-service
 
   main-app:
     build: ./main-app
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   shadow-app:
     build: ./shadow-app
     environment:
       - BUG_MODE=true
       - BUG_TYPE=missing_field
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   dashboard:
     build: ./dashboard
     ports:
       - "5173:80"
     depends_on:
-      - proxy
+      proxy:
+        condition: service_started

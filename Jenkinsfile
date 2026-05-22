@@ -37,9 +37,12 @@ pipeline {
       steps {
         bat 'docker compose down --remove-orphans'
         bat 'docker compose up -d --build'
-        powershell 'Start-Sleep -Seconds 10'
+        powershell 'Start-Sleep -Seconds 20'
         powershell 'Invoke-WebRequest -UseBasicParsing http://localhost:3000/health | Out-Null'
-        powershell 'Invoke-WebRequest -UseBasicParsing http://localhost:5173 | Out-Null'
+        powershell 'Invoke-WebRequest -UseBasicParsing http://localhost:3000/items | Out-Null'
+        powershell 'Invoke-WebRequest -UseBasicParsing http://localhost:3000/__shadow/stats | Out-Null'
+        powershell 'Invoke-WebRequest -UseBasicParsing http://localhost:5173/ | Out-Null'
+        powershell 'Invoke-WebRequest -UseBasicParsing http://localhost:5173/__shadow/stats | Out-Null'
       }
     }
 

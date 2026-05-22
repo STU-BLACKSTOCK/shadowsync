@@ -61,27 +61,36 @@ docker compose up -d --build
 
 ## Kubernetes Deployment Demo (Review 2)
 
-Apply manifests:
+**Full step-by-step:** see [DEMO-RUNBOOK.md](./DEMO-RUNBOOK.md).
+
+Quick prep (Windows / Minikube):
+
+```powershell
+.\scripts\demo-k8s.ps1
+minikube service dashboard-service --url
+# New terminal: kubectl port-forward service/proxy-service 3000:3000
+# New terminal: cd shadow-app; npm install; npm run loadtest
+```
+
+Apply manifests manually:
 
 ```bash
 kubectl apply -f k8s/Deployment.yaml
 kubectl apply -f k8s/Service.yaml
 ```
 
-Verify workloads:
+Build and load images into Minikube before deploy (tags must match `k8s/Deployment.yaml`):
 
 ```bash
-kubectl get pods
-kubectl get services
+docker build -t vishalv2005/shadowsync-main-app:latest ./main-app
+docker build -t vishalv2005/shadowsync-shadow-app:latest ./shadow-app
+docker build -t vishalv2005/shadowsync-proxy:latest ./proxy
+docker build -t vishalv2005/shadowsync-dashboard:latest ./dashboard
+minikube image load vishalv2005/shadowsync-main-app:latest
+minikube image load vishalv2005/shadowsync-shadow-app:latest
+minikube image load vishalv2005/shadowsync-proxy:latest
+minikube image load vishalv2005/shadowsync-dashboard:latest
 ```
-
-Access app:
-
-```bash
-minikube service dashboard-service --url
-```
-
-Use the returned URL in browser. This serves the dashboard from Kubernetes.
 
 ## Demo: Breaking Shadow Without Affecting Users
 

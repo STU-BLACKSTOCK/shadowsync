@@ -13,19 +13,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build all services
-        run: docker compose build proxy main-app shadow-app
+        run: docker compose build
 
       - name: Start services
-        run: docker compose up -d proxy main-app shadow-app
+        run: docker compose up -d
 
       - name: Wait for services
-        run: sleep 8
-
-      - name: Health check - Main App
-        run: curl -f http://localhost:3001/health
-
-      - name: Health check - Shadow App
-        run: curl -f http://localhost:3002/health
+        run: sleep 15
 
       - name: Health check - Proxy
         run: curl -f http://localhost:3000/health
@@ -35,6 +29,11 @@ jobs:
           curl -f http://localhost:3000/items
           curl -f http://localhost:3000/__shadow/logs
           curl -f http://localhost:3000/__shadow/stats
+
+      - name: Health check - Dashboard
+        run: |
+          curl -f http://localhost:5173/
+          curl -f http://localhost:5173/__shadow/stats
 
       - name: Teardown
         run: docker compose down
